@@ -19,7 +19,8 @@ class NeuralNetwork:
                 nihs = [ni]
                 nhs = []
         if len(nihs) > 1:
-            self.Vs = [1/np.sqrt(nihs[i]) * np.random.uniform(-1, 1, size=(1+nihs[i], nihs[i+1])) for i in range(len(nihs)-1)]
+            self.Vs = [1/np.sqrt(nihs[i]) *
+                       np.random.uniform(-1, 1, size=(1+nihs[i], nihs[i+1])) for i in range(len(nihs)-1)]
             self.W = 1/np.sqrt(nhs[-1]) * np.random.uniform(-1, 1, size=(1+nhs[-1], no))
         else:
             self.Vs = []
@@ -94,7 +95,7 @@ class NeuralNetwork:
         Y = Zprev @ self.W[1:, :] + self.W[0:1, :]
         # Do backward pass, starting with delta in output layer
         delta = -(T - Y) / (X.shape[0] * T.shape[1])
-        dW = np.vstack((np.ones((1, delta.shape[0])) @ delta,
+        dW = np.vstack((np.ones((1, delta.shape[0])) @ delta, 
                         Z[-1].T @ delta))
         dVs = []
         delta = self.activationDerivative(Z[-1]) * (delta @ self.W[1:, :].T)
@@ -108,7 +109,7 @@ class NeuralNetwork:
 
     def train(self, X, T, nIterations=100, verbose=False,
               weightPrecision=0, errorPrecision=0, saveWeightsHistory=False):
-
+        
         if self.Xmeans is None:
             self.Xmeans = X.mean(axis=0)
             self.Xstds = X.std(axis=0)
@@ -180,15 +181,26 @@ class NeuralNetwork:
     def activationDerivative(self, activation_value):
         return 1 - activation_value * activation_value
 
+class NeuralNetworkReLU(NeuralNetwork):
+    
+    def activation(self, weighted_sum):
+        return weighted_sum * (weighted_sum > 0)
+
+    def activationDerivative(self, activation_value):
+        return 1.0 * (activation_value > 0)
+ 
 if __name__ == '__main__':
 
     X = np.arange(10).reshape((-1, 1))
     T = X + 2
 
+    nnet = NeuralNetworkReLU(1,5,1)
+    print(nnet)
+
     net = NeuralNetwork(1, 0, 1)
     net.train(X, T, 10)
     print(net)
-
+    
     net = NeuralNetwork(1, [5, 5], 1)
     net.train(X, T, 10)
     print(net)
